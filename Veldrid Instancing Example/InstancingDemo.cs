@@ -23,10 +23,10 @@ internal class InstancingDemo
     {
         WindowCreateInfo windowCI = new WindowCreateInfo()
         {
-            X = 100,
-            Y = 100,
-            WindowWidth = 1280,
-            WindowHeight = 720,
+            X = 0,
+            Y = 0,
+            WindowWidth = 2560,
+            WindowHeight = 1440,
             WindowTitle = "Veldrid Tutorial"
         };
         _window = VeldridStartup.CreateWindow(ref windowCI);
@@ -39,8 +39,8 @@ internal class InstancingDemo
             ResourceBindingModel= ResourceBindingModel.Improved,
             Debug = true
         };
-        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.OpenGL);
-        _map = new Map(graphicsDevice, 175, 175);
+        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.Direct3D11);
+        _map = new Map(graphicsDevice, 128, 128);
     }
 
     internal void Run()
@@ -52,6 +52,10 @@ internal class InstancingDemo
             InputSnapshot inputSnapshot = _window.PumpEvents();
             InputTracker.UpdateFrameInput(inputSnapshot);
             Draw();
+            if (InputTracker.GetKeyDown(Key.Escape))
+            {
+                _window.Close();
+            }
         }
 
         DisposeResources();

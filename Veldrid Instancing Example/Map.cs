@@ -28,18 +28,20 @@ internal class Map
     private int _width;
     private int _height;
     private Vector2 _tileSizeHalf = new Vector2(16, 8);
-    private Vector2 _cameraPosition = new Vector2(0, 0);
+    private Vector2 _cameraPosition = new Vector2(0, -1500);
     private Random _randomTile = new Random();
     private ResourceSet _instanceTextureSet;
     private ResourceSet _sharedResourceSet;
     private DeviceBuffer _cameraProjViewBuffer;
     private DeviceBuffer _imageDataBuffer;
     private ProjView _projView;
+    private readonly TileInstance[] _instances;
     public Map(GraphicsDevice graphicsDevice, int width, int height)
     {
         _width = width;
         _height = height;
         _graphicsDevice = graphicsDevice;
+        _instances = new TileInstance[width * height];
         CreateResources();
     }
     private void CreateResources()
@@ -85,15 +87,16 @@ internal class Map
         _cameraProjViewBuffer = factory.CreateBuffer(
                 new BufferDescription((uint)(Unsafe.SizeOf<ProjView>()), BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _cameraProjViewBuffer.Name = "CameraProjViewBuffer";
+        UpdateCameraPos();
 
-       
-        _imageDataBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<Vector2>() * 1000 * 2, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+
+        _imageDataBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<Vector2>() * 1000, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _imageDataBuffer.Name = "ImageDataBuffer";
 
         var imageSizeArray = new Vector2[2];
         for (int i = 0; i < imageSizeArray.Length; i++)
         {
-            imageSizeArray[i] = new Vector2(30, 34);
+            imageSizeArray[i] = new Vector2(32, 64);
         }
         _graphicsDevice.UpdateBuffer(_imageDataBuffer, 0, imageSizeArray);
 
@@ -142,7 +145,7 @@ internal class Map
     {
         ushort[] quadIndices = new ushort[6];
         quadIndices[0] = 0; quadIndices[1] = 1; quadIndices[2] = 2;
-        quadIndices[3] = 1; quadIndices[4] = 3; quadIndices[5] = 2;
+        quadIndices[3] = 0; quadIndices[4] = 2; quadIndices[5] = 3;
         var indexBuffer = factory.CreateBuffer(new BufferDescription((uint)quadIndices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
         indexBuffer.Name = "IndexBuffer";
         _graphicsDevice.UpdateBuffer(indexBuffer, 0, quadIndices);
@@ -173,29 +176,28 @@ internal class Map
 
     private DepthStencilStateDescription CreateDepthStencil()
     {
-        return DepthStencilStateDescription.DepthOnlyLessEqual;
+        return DepthStencilStateDescription.Disabled;
     }
 
     private DeviceBuffer CreateInstanceBuffer(in ResourceFactory factory, in GraphicsDevice graphicsDevice)
     {
-        TileInstance[] instances = new TileInstance[_width * _height];
+    
 
         for (int y = 0; y < _height; y++)
         {
             for (int x = 0; x < _width; x++)
             {
-                float postionXCentered = (_tileSizeHalf.X * x - _tileSizeHalf.X * y);
-                float postionYCentered = (_tileSizeHalf.Y * x + _tileSizeHalf.Y * y + _tileSizeHalf.Y);
-                instances[y * _width + x].InstanceTransform = new Vector2(postionXCentered, postionYCentered);
-                instances[y * _width + x].AtlasCoord = new RgbaByte((byte)_randomTile.Next(0, 28), 0, 0, 0);
+
+                _instances[y * _width + x].InstanceTransform = new RgbaByte((byte)(x % 256), (byte)(x / 256), (byte)(y % 256), (byte)(y / 256));
+                _instances[y * _width + x].AtlasCoord = new RgbaByte(4, 0, 0, 0);//(byte)_randomTile.Next(0, 28)
             }
         }
 
 
 
-        var instanceBuffer = factory.CreateBuffer(new BufferDescription((uint)instances.Length * TileInstance.SizeInBytes, BufferUsage.VertexBuffer));
+        var instanceBuffer = factory.CreateBuffer(new BufferDescription((uint)_instances.Length * TileInstance.SizeInBytes, BufferUsage.VertexBuffer));
         instanceBuffer.Name = "InstanceBuffer";
-        _graphicsDevice.UpdateBuffer(instanceBuffer, 0, instances);
+        _graphicsDevice.UpdateBuffer(instanceBuffer, 0, _instances);
 
         return instanceBuffer;
     }
@@ -244,9 +246,9 @@ internal class Map
         _commandList.Begin();
        
         _commandList.UpdateBuffer(_cameraProjViewBuffer, 0, _projView);
+        _commandList.UpdateBuffer(_instanceBuffer, 0, _instances);
 
-
-        _commandList.SetFramebuffer(_graphicsDevice.MainSwapchain.Framebuffer);
+        _commandList.SetFramebuffer(_graphicsDevice.SwapchainFramebuffer);
         _commandList.ClearColorTarget(0, RgbaFloat.Grey);
         //_commandList.ClearDepthStencil(1f);
 
@@ -271,29 +273,29 @@ internal class Map
 
         _commandList.End();
         _graphicsDevice.SubmitCommands(_commandList);
-        _graphicsDevice.WaitForIdle();
-        _graphicsDevice.SwapBuffers(_graphicsDevice.MainSwapchain);
+        //_graphicsDevice.WaitForIdle();
+        _graphicsDevice.SwapBuffers();
     }
 
     private void UpdateCamera()
     {
-        if (InputTracker.GetKey(Key.W))
+        if (InputTracker.GetKey(Key.S))
         {
             _cameraPosition.Y -= (float)1;
             UpdateCameraPos();
         }
-        else if (InputTracker.GetKey(Key.S))
+        else if (InputTracker.GetKey(Key.W))
         {
             _cameraPosition.Y += (float)1;
             UpdateCameraPos();
         }
-        if (InputTracker.GetKey(Key.A))
+        if (InputTracker.GetKey(Key.D))
         {
             _cameraPosition.X -= (float)1;
 
             UpdateCameraPos();
         }
-        else if (InputTracker.GetKey(Key.D))
+        else if (InputTracker.GetKey(Key.A))
         {
             _cameraPosition.X += (float)1;
 

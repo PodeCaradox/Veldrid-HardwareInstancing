@@ -9,5 +9,7 @@ layout(location = 0) out vec4 fsout_Color;
 void main()
 {
     fsout_Color = texture(sampler2DArray(Tex, Samp), fsin_TexCoord);
-	//fsout_Color = vec4(1,1,1,1);
+	if(fsout_Color.r == 0){
+		discard;
+	}
 }
