@@ -1,0 +1,16 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "6e1d96d7-fec7-4000-a559-aacaee7b3aee": {
+      "ProjectGuid": "6e1d96d7-fec7-4000-a559-aacaee7b3aee",
+      "DisplayName": "Veldrid Instancing Example",
+      "ColorIndex": 0
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Sonstige Dateien",
+      "ColorIndex": -1
+    }
+  },
+  "NextColorIndex": 1
+}
