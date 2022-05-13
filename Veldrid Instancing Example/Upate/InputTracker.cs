@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Veldrid;
@@ -10,6 +12,7 @@ namespace Veldrid_Instancing_Example.Upate;
 
 public static class InputTracker
 {
+    private static HashSet<Key> _currentlyKeysState = new HashSet<Key>();
     private static HashSet<Key> _currentlyPressedKeys = new HashSet<Key>();
     private static HashSet<Key> _newKeysThisFrame = new HashSet<Key>();
 
@@ -27,6 +30,11 @@ public static class InputTracker
     public static bool GetKeyDown(Key key)
     {
         return _newKeysThisFrame.Contains(key);
+    }
+
+    public static bool GetPressedOnce(Key key)
+    {
+        return _currentlyPressedKeys.Contains(key) && _currentlyKeysState.Contains(key);
     }
 
     public static bool GetMouseButton(MouseButton button)
@@ -88,14 +96,17 @@ public static class InputTracker
 
     private static void KeyUp(Key key)
     {
+        _currentlyKeysState.Add(key);
         _currentlyPressedKeys.Remove(key);
         _newKeysThisFrame.Remove(key);
     }
 
     private static void KeyDown(Key key)
     {
+       
         if (_currentlyPressedKeys.Add(key))
         {
+            _currentlyKeysState.Remove(key);
             _newKeysThisFrame.Add(key);
         }
     }

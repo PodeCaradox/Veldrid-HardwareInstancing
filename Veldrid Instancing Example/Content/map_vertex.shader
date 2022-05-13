@@ -33,7 +33,7 @@ void main()
 	vec2 imageSize =  ImageSizeArray[index];
 	
 	//how many Images are possible inside of the big texture
-	vec2 numberOfTextures = vec2(2048.0f,2048.0f) / vec2(imageSize.x,imageSize.y); // all Images are 2048 x 2048 
+	vec2 numberOfTextures = vec2(2048.0f,2048.0f) / imageSize; // all Images are 2048 x 2048 
 	
 	//Calculate ImageSizeToDraw
 	//- float2(imageSize.x/2,imageSize.y - tileSizeHalf.y) because images have different starting points 

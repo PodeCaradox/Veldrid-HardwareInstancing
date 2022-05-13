@@ -37,6 +37,7 @@ internal class InstancingDemo
             PreferStandardClipSpaceYDirection = true,
             PreferDepthRangeZeroToOne = true,
             ResourceBindingModel= ResourceBindingModel.Improved,
+            SwapchainSrgbFormat = true,
             Debug = true
         };
         var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.Direct3D11);

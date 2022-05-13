@@ -11,7 +11,6 @@ using Veldrid.Sdl2;
 using Veldrid.SPIRV;
 using Veldrid_Instancing_Example.Instancing;
 using Veldrid_Instancing_Example.Types;
-using Vector2 = Veldrid_Instancing_Example.Instancing.Vector2;
 using Veldrid_Instancing_Example.Upate;
 
 namespace Veldrid_Instancing_Example;
@@ -35,6 +34,7 @@ internal class Map
     private DeviceBuffer _cameraProjViewBuffer;
     private DeviceBuffer _imageDataBuffer;
     private ProjView _projView;
+    private float scale = 1;
     private readonly TileInstance[] _instances;
     public Map(GraphicsDevice graphicsDevice, int width, int height)
     {
@@ -54,7 +54,7 @@ internal class Map
             _graphicsDevice,
             factory,
             tileTextureData,
-            PixelFormat.BC1_Rgba_UNorm_SRgb);
+            PixelFormat.R8_G8_B8_A8_UNorm_SRgb);
         TextureView texureAtlasArray = factory.CreateTextureView(textureAtlases);
 
         _projView = new ProjView();
@@ -71,8 +71,8 @@ internal class Map
                 new ResourceLayoutElementDescription("Samp", ResourceKind.Sampler, ShaderStages.Fragment)
             };
         ResourceLayout textureLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(textureLayoutDescriptions));
-
-        BindableResource[] instanceBindableResources = { texureAtlasArray, _graphicsDevice.LinearSampler };
+    
+        BindableResource[] instanceBindableResources = { texureAtlasArray, _graphicsDevice.PointSampler };
         _instanceTextureSet = factory.CreateResourceSet(new ResourceSetDescription(textureLayout, instanceBindableResources));
         _instanceTextureSet.Name = "TextureSet";
         ResourceLayoutElementDescription[] resourceLayoutElementDescriptions =
@@ -96,7 +96,7 @@ internal class Map
         var imageSizeArray = new Vector2[2];
         for (int i = 0; i < imageSizeArray.Length; i++)
         {
-            imageSizeArray[i] = new Vector2(32, 64);
+            imageSizeArray[i] = new Vector2(30, 64);
         }
         _graphicsDevice.UpdateBuffer(_imageDataBuffer, 0, imageSizeArray);
 
@@ -116,7 +116,7 @@ internal class Map
 
         _shaders = factory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
         GraphicsPipelineDescription pipelineDescription = new GraphicsPipelineDescription();
-        pipelineDescription.BlendState = BlendStateDescription.SingleOverrideBlend;
+        pipelineDescription.BlendState = BlendStateDescription.SingleAlphaBlend;
         pipelineDescription.DepthStencilState = CreateDepthStencil();
         pipelineDescription.RasterizerState = CreateRasterizerStateDescription();
         pipelineDescription.PrimitiveTopology = PrimitiveTopology.TriangleList;
@@ -145,7 +145,7 @@ internal class Map
     {
         ushort[] quadIndices = new ushort[6];
         quadIndices[0] = 0; quadIndices[1] = 1; quadIndices[2] = 2;
-        quadIndices[3] = 0; quadIndices[4] = 2; quadIndices[5] = 3;
+        quadIndices[3] = 1; quadIndices[4] = 3; quadIndices[5] = 2;
         var indexBuffer = factory.CreateBuffer(new BufferDescription((uint)quadIndices.Length * sizeof(ushort), BufferUsage.IndexBuffer));
         indexBuffer.Name = "IndexBuffer";
         _graphicsDevice.UpdateBuffer(indexBuffer, 0, quadIndices);
@@ -189,7 +189,7 @@ internal class Map
             {
 
                 _instances[y * _width + x].InstanceTransform = new RgbaByte((byte)(x % 256), (byte)(x / 256), (byte)(y % 256), (byte)(y / 256));
-                _instances[y * _width + x].AtlasCoord = new RgbaByte(4, 0, 0, 0);//(byte)_randomTile.Next(0, 28)
+                _instances[y * _width + x].AtlasCoord = new RgbaByte((byte)_randomTile.Next(0, 28), 0, 0, 0);
             }
         }
 
@@ -217,6 +217,7 @@ internal class Map
         quadVertices[2].TexCoord = new RgbaByte(0, size, 0, 0);
         quadVertices[3].Position = new RgbaByte(size, size, 0, 0);
         quadVertices[3].TexCoord = new RgbaByte(size, size, 0, 0);
+
 
 
         #endregion
@@ -301,12 +302,25 @@ internal class Map
 
             UpdateCameraPos();
         }
+       
+        if (InputTracker.GetPressedOnce(Key.BracketRight))
+        {
+            scale += 0.2f;
+
+            UpdateCamera();
+        }
+        else if (InputTracker.GetPressedOnce(Key.Slash))
+        {
+            if (scale > 0.4f) scale -= 0.2f;
+
+            UpdateCamera();
+        }
     }
 
     private void UpdateCameraPos()
     {
         _projView.WorldViewProjection = Matrix4x4.CreateTranslation(new Vector3(_cameraPosition.X, _cameraPosition.Y, 0)) *
-        Matrix4x4.CreateScale(1, 1, 1) *
+        Matrix4x4.CreateScale(scale, scale, 1) *
         Matrix4x4.CreateTranslation(new Vector3(2560 * 0.5f, 1440 * 0.5f, 0));
     }
 }
