@@ -37,10 +37,10 @@ internal class InstancingDemo
             PreferStandardClipSpaceYDirection = true,
             PreferDepthRangeZeroToOne = true,
             ResourceBindingModel= ResourceBindingModel.Improved,
-            SwapchainSrgbFormat = true,
+            SwapchainSrgbFormat = false,
             //Debug = true
         };
-        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.Direct3D11);
+        var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.Vulkan);
         _map = new Map(graphicsDevice, 128, 128);
     }
 

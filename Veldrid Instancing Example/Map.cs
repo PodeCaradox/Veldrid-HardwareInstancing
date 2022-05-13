@@ -27,14 +27,15 @@ internal class Map
     private int _width;
     private int _height;
     private Vector2 _tileSizeHalf = new Vector2(16, 8);
-    private Vector2 _cameraPosition = new Vector2(0, -1500);
+    private Vector2 _cameraPosition = new Vector2(0, -1000);
     private Random _randomTile = new Random();
     private ResourceSet _instanceTextureSet;
     private ResourceSet _sharedResourceSet;
     private DeviceBuffer _cameraProjViewBuffer;
     private DeviceBuffer _imageDataBuffer;
     private ProjView _projView;
-    private float scale = 1;
+    private float scale = 1f;
+    private float previousMouseWheelValue;
     private readonly TileInstance[] _instances;
     public Map(GraphicsDevice graphicsDevice, int width, int height)
     {
@@ -50,11 +51,16 @@ internal class Map
 
         byte[] tileTextureData = DataManager.LoadTexture("tile_atlas_array.ktx");
 
+        bool etc2Supported = _graphicsDevice.GetPixelFormatSupport(
+                PixelFormat.R8_G8_B8_A8_UNorm,
+                TextureType.Texture2D,
+                TextureUsage.Sampled);
+
         Texture textureAtlases = KtxFile.LoadTexture(
             _graphicsDevice,
             factory,
             tileTextureData,
-            PixelFormat.R8_G8_B8_A8_UNorm);
+            PixelFormat.BC1_Rgba_UNorm);
         TextureView texureAtlasArray = factory.CreateTextureView(textureAtlases);
 
         _projView = new ProjView();
@@ -248,7 +254,6 @@ internal class Map
         //ChangeInstances();
         _commandList.UpdateBuffer(_cameraProjViewBuffer, 0, _projView);
         _commandList.UpdateBuffer(_instanceBuffer, 0, _instances);
-
         _commandList.SetFramebuffer(_graphicsDevice.SwapchainFramebuffer);
         _commandList.ClearColorTarget(0, RgbaFloat.Grey);
         //_commandList.ClearDepthStencil(1f);
@@ -313,19 +318,20 @@ internal class Map
 
             UpdateCameraPos();
         }
-       
-        if (InputTracker.GetPressedOnce(Key.BracketRight))
-        {
-            scale += 0.2f;
+        //var currentMouseWheelValue = InputTracker.WheelDelta();
+        //if (currentMouseWheelValue > previousMouseWheelValue)
+        //{
+        //    if (scale < 2f) scale += 0.2f;
 
-            UpdateCamera();
-        }
-        else if (InputTracker.GetPressedOnce(Key.Slash))
-        {
-            if (scale > 0.4f) scale -= 0.2f;
+        //    UpdateCamera();
+        //}
+        //else if (currentMouseWheelValue < previousMouseWheelValue)
+        //{
+        //    if (scale > 0.6f) scale -= 0.2f;
 
-            UpdateCamera();
-        }
+        //    UpdateCamera();
+        //}
+        //previousMouseWheelValue = currentMouseWheelValue;
     }
 
     private void UpdateCameraPos()

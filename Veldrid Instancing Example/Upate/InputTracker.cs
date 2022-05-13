@@ -20,8 +20,15 @@ public static class InputTracker
     private static HashSet<MouseButton> _newMouseButtonsThisFrame = new HashSet<MouseButton>();
 
     public static Vector2 MousePosition;
+    private static float _wheelDelta;
+
     public static InputSnapshot FrameSnapshot { get; private set; }
 
+
+    public static float WheelDelta()
+    {
+        return _wheelDelta;
+    }
     public static bool GetKey(Key key)
     {
         return _currentlyPressedKeys.Contains(key);
@@ -66,9 +73,11 @@ public static class InputTracker
                 KeyUp(ke.Key);
             }
         }
+        _wheelDelta = snapshot.WheelDelta;
         for (int i = 0; i < snapshot.MouseEvents.Count; i++)
         {
             MouseEvent me = snapshot.MouseEvents[i];
+         
             if (me.Down)
             {
                 MouseDown(me.MouseButton);
