@@ -54,7 +54,7 @@ internal class Map
             _graphicsDevice,
             factory,
             tileTextureData,
-            PixelFormat.R8_G8_B8_A8_UNorm_SRgb);
+            PixelFormat.R8_G8_B8_A8_UNorm);
         TextureView texureAtlasArray = factory.CreateTextureView(textureAtlases);
 
         _projView = new ProjView();
@@ -90,7 +90,7 @@ internal class Map
         UpdateCameraPos();
 
 
-        _imageDataBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<Vector2>() * 1000, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
+        _imageDataBuffer = factory.CreateBuffer(new BufferDescription((uint)Unsafe.SizeOf<Vector2>() * 1000 * 2, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         _imageDataBuffer.Name = "ImageDataBuffer";
 
         var imageSizeArray = new Vector2[2];
@@ -245,7 +245,7 @@ internal class Map
         UpdateCamera();
 
         _commandList.Begin();
-       
+        //ChangeInstances();
         _commandList.UpdateBuffer(_cameraProjViewBuffer, 0, _projView);
         _commandList.UpdateBuffer(_instanceBuffer, 0, _instances);
 
@@ -276,6 +276,17 @@ internal class Map
         _graphicsDevice.SubmitCommands(_commandList);
         //_graphicsDevice.WaitForIdle();
         _graphicsDevice.SwapBuffers();
+    }
+
+    private void ChangeInstances()
+    {
+        for (int y = 0; y < _height; y++)
+        {
+            for (int x = 0; x < _width; x++)
+            {
+                _instances[y * _width + x].AtlasCoord = new RgbaByte((byte)_randomTile.Next(0, 28), 0, 0, 0);
+            }
+        }
     }
 
     private void UpdateCamera()

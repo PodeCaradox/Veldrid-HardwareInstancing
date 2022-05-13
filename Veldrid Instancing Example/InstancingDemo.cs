@@ -38,7 +38,7 @@ internal class InstancingDemo
             PreferDepthRangeZeroToOne = true,
             ResourceBindingModel= ResourceBindingModel.Improved,
             SwapchainSrgbFormat = true,
-            Debug = true
+            //Debug = true
         };
         var graphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, options, GraphicsBackend.Direct3D11);
         _map = new Map(graphicsDevice, 128, 128);
